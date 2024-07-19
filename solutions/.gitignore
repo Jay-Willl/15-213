@@ -1,0 +1,12 @@
+_book
+node_modules
+a.out
+main
+
+*.pdf
+*.epub
+*.mobi
+
+core
+*.origin
+

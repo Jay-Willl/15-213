@@ -1,0 +1,43 @@
+#
+# makefile
+#
+
+all:
+	(cd site/content/chapter2/code; make)
+	(cd site/content/chapter3/code; make)
+	(cd site/content/chapter4/code; make)
+	(cd site/content/chapter5/code; make)
+	(cd site/content/chapter6/code; make)
+	(cd site/content/chapter7/code; make)
+	(cd site/content/chapter8/code; make)
+	(cd site/content/chapter9/code; make)
+	(cd site/content/chapter10/code; make)
+	(cd site/content/chapter11/code; make)
+	(cd site/content/chapter12/code; make)
+
+test:
+	(cd site/content/chapter2/code; make test)
+	(cd site/content/chapter3/code; make test)
+	(cd site/content/chapter4/code; make test)
+	(cd site/content/chapter5/code; make test)
+	(cd site/content/chapter6/code; make test)
+	(cd site/content/chapter7/code; make test)
+	(cd site/content/chapter8/code; make test)
+	(cd site/content/chapter9/code; make test)
+	(cd site/content/chapter10/code; make test)
+	(cd site/content/chapter11/code; make test)
+	(cd site/content/chapter12/code; make test)
+
+.PHONY : clean
+clean:
+	(cd site/content/chapter2/code; make clean)
+	(cd site/content/chapter3/code; make clean)
+	(cd site/content/chapter4/code; make clean)
+	(cd site/content/chapter5/code; make clean)
+	(cd site/content/chapter6/code; make clean)
+	(cd site/content/chapter7/code; make clean)
+	(cd site/content/chapter8/code; make clean)
+	(cd site/content/chapter9/code; make clean)
+	(cd site/content/chapter10/code; make clean)
+	(cd site/content/chapter11/code; make clean)
+	(cd site/content/chapter12/code; make clean)
