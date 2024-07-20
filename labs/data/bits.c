@@ -1,8 +1,8 @@
-/* 
- * CS:APP Data Lab 
- * 
+/*
+ * CS:APP Data Lab
+ *
  * <Please put your name and userid here>
- * 
+ *
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
  *
@@ -10,7 +10,7 @@
  * compiler. You can still use printf for debugging without including
  * <stdio.h>, although you might get a compiler warning. In general,
  * it's not good practice to ignore compiler warnings, but in this
- * case it's OK.  
+ * case it's OK.
  */
 
 #if 0
@@ -131,43 +131,67 @@ NOTES:
  *   2. Use the BDD checker to formally verify that your solutions produce 
  *      the correct answers.
  */
-
-
 #endif
-//1
-/* 
- * bitXor - x^y using only ~ and & 
+
+// 1
+/*
+ * bitXor - x^y using only ~ and &
  *   Example: bitXor(4, 5) = 1
  *   Legal ops: ~ &
  *   Max ops: 14
  *   Rating: 1
  */
-int bitXor(int x, int y) {
-  return 2;
+/*
+0001 0001 1110
+0011 1100 0011
+     0000 0010
+     1111 1101
+          1101
+          0010
+*/
+int bitXor(int x, int y)
+{
+    return ~(~(~x & y) & ~(x & ~y));
 }
-/* 
- * tmin - return minimum two's complement integer 
+
+/*
+ * tmin - return minimum two's complement integer
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 4
  *   Rating: 1
  */
-int tmin(void) {
-
-  return 2;
-
+/*
+111...111
+111...110
+011...111
+ */
+int tmin(void)
+{
+    return (~0) << 31;
 }
-//2
+
+// 2
 /*
  * isTmax - returns 1 if x is the maximum, two's complement number,
- *     and 0 otherwise 
+ *     and 0 otherwise
  *   Legal ops: ! ~ & ^ | +
  *   Max ops: 10
  *   Rating: 1
  */
-int isTmax(int x) {
-  return 2;
+/*
+x == TMax -> ~xor(mask, x) == 111...111
+x != TMax -> ~xor(mask, x) == 000...000
+*/
+int isTmax(int x)
+{
+    int mask = 0x7fffffff;
+    int xored = ((x & ~mask) | (~x & mask));
+    return !xored;
+
+    // return !!((x + 1) >> 31);
 }
-/* 
+
+/*
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
  *   where bits are numbered from 0 (least significant) to 31 (most significant)
  *   Examples allOddBits(0xFFFFFFFD) = 0, allOddBits(0xAAAAAAAA) = 1
@@ -175,21 +199,36 @@ int isTmax(int x) {
  *   Max ops: 12
  *   Rating: 2
  */
-int allOddBits(int x) {
-  return 2;
+/*
+IF x is allOddBits -> xor(masked, mask) == 000...000
+IF x is not allOddBits -> xor(masked, mask) != 000...000
+*/
+int allOddBits(int x)
+{
+    int mask = 0xAAAAAAAA;
+    int masked = mask & x;
+    int xored = ((masked & ~mask) | (~masked & mask));
+    return !xored;
 }
-/* 
- * negate - return -x 
+
+/*
+ * negate - return -x
  *   Example: negate(1) = -1.
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 5
  *   Rating: 2
  */
-int negate(int x) {
-  return 2;
+/*
+IF x == TMin DO return TMin
+IF x != TMin DO return ~x + 1
+*/
+int negate(int x)
+{
+    return ~x + 1;
 }
-//3
-/* 
+
+// 3
+/*
  * isAsciiDigit - return 1 if 0x30 <= x <= 0x39 (ASCII codes for characters '0' to '9')
  *   Example: isAsciiDigit(0x35) = 1.
  *            isAsciiDigit(0x3a) = 0.
@@ -198,41 +237,130 @@ int negate(int x) {
  *   Max ops: 15
  *   Rating: 3
  */
-int isAsciiDigit(int x) {
-  return 2;
+/*
+0x00110000 0x00111001
+
+0x ffffffdx
+0x 0000003x
+0x10000000x
+
+0b0000 || 0b0111 || 0b1000 || 0b1001
+lower_x >> 3 == 0 || ~xor(lower_x >> 1, 0b011) == 0 (xor(lower_x, 0b1000) == 0 || xor(lower_x, 0b1001) == 0)
+
+111 -> 1
+110 -> 0
+*/
+int isAsciiDigit(int x)
+{
+    int upper_mask = 0xfffffff0;
+    int upper_res = x & upper_mask;
+    upper_res = !(upper_res ^ 0x00000030);
+    int lower_x = x + 0xffffffd0;
+    // printf(">>>\n");
+    // printf("%x\n", x);
+    // printf("%x\n", upper_res);
+    // printf("%x\n", lower_x);
+    // printf("%x\n", lower_x >> 3);
+    // printf("%x\n", (lower_x >> 1));
+    // printf("%x\n", !(((lower_x >> 1) ^ 0x3)) ^ 0x7);
+    // printf("<<<\n");
+
+    return upper_res & (
+        !(lower_x >> 3) |
+        !((((lower_x >> 1) ^ 0x3)) ^ 0x7)
+    );
 }
-/* 
- * conditional - same as x ? y : z 
+
+/*
+ * conditional - same as x ? y : z
  *   Example: conditional(2,4,5) = 4
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 16
  *   Rating: 3
  */
-int conditional(int x, int y, int z) {
-  return 2;
+/*
+IF x != 0 DO return y
+IF x == 0 DO return z
+
+if x != 0 -> xor(x, 0) != 0 -> !!xor(x, 0) == 1 -> 
+if x == 0 -> xor(x, 0) == 0 -> !!xor(x, 0) == 0 -> 
+
+>>>
+return x_is_not_0 & y + x_is_0 & z
+>>>
+x_is_0 :
+    x == 0 DO return 111...111
+    x != 0 DO return 000...000
+x_is_not_0:
+    x == 0 DO return 000...000
+    x != 0 DO return 111...111
+*/
+int conditional(int x, int y, int z)
+{
+    int x_is_not_0 = (!!(x ^ 0)) << 31 >> 31;
+    int x_is_0 = ~x_is_not_0;
+    // printf("%x\n", x_is_0);
+    // printf("%x\n", x_is_not_0);
+    // printf("%x\n", x_is_not_0 & y);
+    // printf("%x\n", x_is_0 & z);
+    // printf("%x\n", x_is_not_0 & y + x_is_0 & z);
+    // printf("%x\n", (x_is_not_0 & y) + (x_is_0 & z));
+    return (x_is_not_0 & y) + (x_is_0 & z);
 }
-/* 
- * isLessOrEqual - if x <= y  then return 1, else return 0 
+
+/*
+ * isLessOrEqual - if x <= y  then return 1, else return 0
  *   Example: isLessOrEqual(4,5) = 1.
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 24
  *   Rating: 3
  */
-int isLessOrEqual(int x, int y) {
-  return 2;
+/*
+IF x <= y DO return 1
+IF x > y DO return 0
+
+>>>
+x <= y -> x - y <= 0
+>>>
+IF y != TMin -> OK
+IF y == TMin -> x - y == x + y -> NOT OK
+>>>
+IF x == y -> !xor(x, y) == 1 DO return 1
+
+IF y == TMin -> xor(y, TMin) == 0 DO return 0
+IF y != TMin -> xor(y, TMin) != 0 DO return 0
+
+IF x < y -> arith_res == 111...111 DO return 1 
+IF x > y -> arith_res == 000...000 DO return 0
+
+*/
+int isLessOrEqual(int x, int y)
+{
+    int arith_res = x + (~y + 1) >> 31;
+    return !(x ^ y) |
+        // !!(y ^ 0x80000000) |
+        !!arith_res;
 }
-//4
-/* 
- * logicalNeg - implement the ! operator, using all of 
+
+// 4
+/*
+ * logicalNeg - implement the ! operator, using all of
  *              the legal operators except !
  *   Examples: logicalNeg(3) = 0, logicalNeg(0) = 1
  *   Legal ops: ~ & ^ | + << >>
  *   Max ops: 12
- *   Rating: 4 
+ *   Rating: 4
  */
-int logicalNeg(int x) {
-  return 2;
+/*
+IF x == 0 DO return 1
+IF x != 0 DO return 0
+*/
+int logicalNeg(int x)
+{
+
+    return 2;
 }
+
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
  *  Examples: howManyBits(12) = 5
@@ -245,11 +373,13 @@ int logicalNeg(int x) {
  *  Max ops: 90
  *  Rating: 4
  */
-int howManyBits(int x) {
-  return 0;
+int howManyBits(int x)
+{
+    return 0;
 }
-//float
-/* 
+
+// float
+/*
  * floatScale2 - Return bit-level equivalent of expression 2*f for
  *   floating point argument f.
  *   Both the argument and result are passed as unsigned int's, but
@@ -260,10 +390,12 @@ int howManyBits(int x) {
  *   Max ops: 30
  *   Rating: 4
  */
-unsigned floatScale2(unsigned uf) {
-  return 2;
+unsigned floatScale2(unsigned uf)
+{
+    return 2;
 }
-/* 
+
+/*
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
  *   for floating point argument f.
  *   Argument is passed as unsigned int, but
@@ -275,10 +407,12 @@ unsigned floatScale2(unsigned uf) {
  *   Max ops: 30
  *   Rating: 4
  */
-int floatFloat2Int(unsigned uf) {
-  return 2;
+int floatFloat2Int(unsigned uf)
+{
+    return 2;
 }
-/* 
+
+/*
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
  *   (2.0 raised to the power x) for any 32-bit integer x.
  *
@@ -286,11 +420,12 @@ int floatFloat2Int(unsigned uf) {
  *   representation as the single-precision floating-point number 2.0^x.
  *   If the result is too small to be represented as a denorm, return
  *   0. If too large, return +INF.
- * 
- *   Legal ops: Any integer/unsigned operations incl. ||, &&. Also if, while 
- *   Max ops: 30 
+ *
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. Also if, while
+ *   Max ops: 30
  *   Rating: 4
  */
-unsigned floatPower2(int x) {
+unsigned floatPower2(int x)
+{
     return 2;
 }
