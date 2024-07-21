@@ -375,6 +375,7 @@ int logicalNeg(int x)
  */
 int howManyBits(int x)
 {
+
     return 0;
 }
 
@@ -386,12 +387,13 @@ int howManyBits(int x)
  *   they are to be interpreted as the bit-level representation of
  *   single-precision floating point values.
  *   When argument is NaN, return argument
- *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. Also if, while
  *   Max ops: 30
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf)
 {
+    
     return 2;
 }
 
@@ -403,12 +405,13 @@ unsigned floatScale2(unsigned uf)
  *   single-precision floating point value.
  *   Anything out of range (including NaN and infinity) should return
  *   0x80000000u.
- *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. Also if, while
  *   Max ops: 30
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf)
 {
+
     return 2;
 }
 
@@ -427,5 +430,6 @@ int floatFloat2Int(unsigned uf)
  */
 unsigned floatPower2(int x)
 {
+
     return 2;
 }
