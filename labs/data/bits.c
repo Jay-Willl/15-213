@@ -491,14 +491,25 @@ int howManyBits(int x)
  */
 /*
 sign | exp | frac
+  1  |  8  |  23
 
-
-
+IF 
 */
 unsigned floatScale2(unsigned uf)
 {
-    
-    return 2;
+    unsigned sign = (uf & 0x80000000) >> 31;
+    unsigned exp = (uf & 0x7f800000) >> 23;
+    unsigned frac = uf & 0x007fffff;
+
+    if (exp == 0xff) {
+        return uf;
+    } else if (exp == 0x0) {
+        return (uf << 1 ) | (sign << 31);
+    } else {
+        exp += 1;
+    }
+
+    return sign << 31 + exp << 23 + frac;
 }
 
 /*
