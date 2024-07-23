@@ -509,7 +509,7 @@ unsigned floatScale2(unsigned uf)
         exp += 1;
     }
 
-    return sign << 31 + exp << 23 + frac;
+    return (sign << 31) + (exp << 23) + frac;
 }
 
 /*
