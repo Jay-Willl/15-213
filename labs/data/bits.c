@@ -354,11 +354,17 @@ int isLessOrEqual(int x, int y)
 /*
 IF x == 0 DO return 1
 IF x != 0 DO return 0
+
+IF x == 0 DO return 0 (000...000) + 1
+IF x != 0 DO return -1 (111...111) + 1
+
+IF x == 0 -> x | (~x + 1) >> 000...000
+IF x != 0 -> x | (~x + 1) >> 111...111
 */
 int logicalNeg(int x)
 {
-
-    return 2;
+    int result = (x | (~x + 1) >> 31);
+    return result + 1;
 }
 
 /* howManyBits - return the minimum number of bits required to represent x in
@@ -373,10 +379,89 @@ int logicalNeg(int x)
  *  Max ops: 90
  *  Rating: 4
  */
+/*
+>>> corner case
+0 -> 1 | 0
+1 -> 2 | 01
+-1 -> 1 | 1
+TMin -> 32 | 0x80000000
+
+>>>
+-5
+1 | 011
+1 | 1111011
+
+-1
+1
+1 | 1111111
+
+-2
+10
+1 | 1111110
+
+0
+0
+0 | 0000000
+
+1
+01
+0 | 0000001
+
+1. truncate sign bit
+    x = x << 1
+2. IF x is a negative value
+    count number of upper consecutive 1's
+2. IF x is a non-negative value
+    count number of upper consecutive 0's
+
+>>> pseudo code
+int zeros
+IF x's upper 16 bits are all 0 <16 | 15 | 1>
+    x << 16
+    result += 16
+IF x's upper 24 bits are all 0 <8 | 7 | 17>
+    x >> 8
+    result += 8
+IF x's upper 28 bits are all 0 <4 | 3 | 25>
+    x >> 4
+    result += 4
+IF x's upper 30 bits are all 0 <2 | 1 | 29>
+    x >> 2
+    result += 2
+IF x's upper 31 bits are all 0 <1 | 1 | 30>
+    x >> 1
+    result += 1
+
+IF B is consecutive 0s, ~(B | ~B + 1) == 111...111
+IF B is not consecutive 0s, ~(B | ~B + 1) == 000...000
+>>> sign
+IF x >= 0 -> ~sign == 111...111
+IF x < 0 -> ~sign == 000...000
+
+truncated = ~sign * (x << 1) + sign * (~(x << 1))
+*/
 int howManyBits(int x)
 {
+    int sign = x >> 31;
+    int truncated = ~sign * (x << 1) + sign * (~(x << 1));  // xxx...xx0
 
-    return 0;
+    int zeros = 0;
+    int upper = x >> 16;
+    zeros += (~(upper | (~upper + 1))) | 16;
+
+    upper = x >> 24;
+    zeros += (~(upper | (~upper + 1))) | 8;
+
+    upper = x >> 28;
+    zeros += (~(upper | (~upper + 1))) | 4;
+
+    upper = x >> 30;
+    zeros += (~(upper | (~upper + 1))) | 2;
+
+    upper = x >> 31;
+    zeros += (~(upper | (~upper + 1))) | 1;
+
+    return zeros + 1;
 }
 
 // float
@@ -391,6 +476,12 @@ int howManyBits(int x)
  *   Max ops: 30
  *   Rating: 4
  */
+/*
+bit sign | exp | frac
+
+
+
+*/
 unsigned floatScale2(unsigned uf)
 {
     
