@@ -336,7 +336,7 @@ IF x > y -> arith_res == 000...000 DO return 0
 */
 int isLessOrEqual(int x, int y)
 {
-    int arith_res = x + (~y + 1) >> 31;
+    int arith_res = (x + (~y + 1)) >> 31;
     return !(x ^ y) |
         // !!(y ^ 0x80000000) |
         !!arith_res;
@@ -363,7 +363,8 @@ IF x != 0 -> x | (~x + 1) >> 111...111
 */
 int logicalNeg(int x)
 {
-    int result = (x | (~x + 1) >> 31);
+    int result = (x | (~x + 1)) >> 31;
+
     return result + 1;
 }
 
@@ -439,28 +440,40 @@ IF x >= 0 -> ~sign == 111...111
 IF x < 0 -> ~sign == 000...000
 
 truncated = ~sign * (x << 1) + sign * (~(x << 1))
+
+0|0000000
+sign: 0
+1111111|0
+
+0|0000001
+sign: 0
+1111110|0
+
 */
 int howManyBits(int x)
 {
     int sign = x >> 31;
-    int truncated = ~sign * (x << 1) + sign * (~(x << 1));  // xxx...xx0
-
+    int truncated = ((~sign) & (x << 1)) + (sign & (~(x << 1)));  // xxx...xx0
+    // printf("%x\n", sign);
+    // printf("%x\n", ~(x << 1));
+    // printf("%x\n", truncated);
     int zeros = 0;
-    int upper = x >> 16;
-    zeros += (~(upper | (~upper + 1))) | 16;
+    int upper = truncated >> 16;
+    zeros += (~(upper | (~upper + 1))) & 16;
 
-    upper = x >> 24;
-    zeros += (~(upper | (~upper + 1))) | 8;
+    upper = truncated >> 24;
+    zeros += (~(upper | (~upper + 1))) & 8;
 
-    upper = x >> 28;
-    zeros += (~(upper | (~upper + 1))) | 4;
+    upper = truncated >> 28;
+    zeros += (~(upper | (~upper + 1))) & 4;
 
-    upper = x >> 30;
-    zeros += (~(upper | (~upper + 1))) | 2;
+    upper = truncated >> 30;
+    zeros += (~(upper | (~upper + 1))) & 2;
 
-    upper = x >> 31;
-    zeros += (~(upper | (~upper + 1))) | 1;
-
+    upper = truncated >> 31;
+    zeros += (~(upper | (~upper + 1))) & 1;
+    printf("%d\n", zeros + 1);
+    // return ((~!(x ^ 0)) | (zeros + 1)) + ((!(x ^ 0)) | 1);
     return zeros + 1;
 }
 
@@ -477,7 +490,7 @@ int howManyBits(int x)
  *   Rating: 4
  */
 /*
-bit sign | exp | frac
+sign | exp | frac
 
 
 
