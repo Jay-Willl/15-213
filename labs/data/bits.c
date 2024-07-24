@@ -492,8 +492,6 @@ int howManyBits(int x)
 /*
 sign | exp | frac
   1  |  8  |  23
-
-IF 
 */
 unsigned floatScale2(unsigned uf)
 {
@@ -524,10 +522,35 @@ unsigned floatScale2(unsigned uf)
  *   Max ops: 30
  *   Rating: 4
  */
+/*
+sign | exp | frac
+  1  |  8  |  23
+*/
 int floatFloat2Int(unsigned uf)
 {
+    int sign = (uf >> 31) && 0x1;
+    unsigned exp = (uf & 0x7f800000) >> 23;
+    int E = exp - 127;
+    unsigned frac = uf & 0x007fffff;
+    
+    if (E < 0) {
+        return 0;
+    } else if (E >= 31) {
+        return 0x80000000u;
+    } else {
+        frac = frac | (1 << 23);
+        if (E < 23) {
+            frac = frac >> (23 - E);
+        } else {
+            frac = frac << (E - 23);
+        }
+    }
 
-    return 2;
+    if (sign) {
+        return -frac;
+    } else {
+        return frac;
+    }
 }
 
 /*
@@ -545,6 +568,13 @@ int floatFloat2Int(unsigned uf)
  */
 unsigned floatPower2(int x)
 {
-
-    return 2;
+    if (x < -149) {
+        return 0;
+    } else if (x < -126) {
+        return (0x1 << (x + 149));
+    } else if (x < 128) {
+        return ((x + 127) << 23);
+    } else {
+        return 0xff << 23;
+    }
 }
