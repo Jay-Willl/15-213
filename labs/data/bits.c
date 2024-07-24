@@ -381,16 +381,11 @@ int logicalNeg(int x)
  *  Rating: 4
  */
 /*
->>> corner case
-0 -> 1 | 0
-1 -> 2 | 01
--1 -> 1 | 1
-TMin -> 32 | 0x80000000
-
 >>>
 -5
 1 | 011
 1 | 1111011
+1   1110110
 
 -1
 1
@@ -408,74 +403,61 @@ TMin -> 32 | 0x80000000
 01
 0 | 0000001
 
-1. truncate sign bit
-    x = x << 1
-2. IF x is a negative value
-    count number of upper consecutive 1's
-2. IF x is a non-negative value
-    count number of upper consecutive 0's
+TMin
+TMin
+1 | 0000000
 
->>> pseudo code
-int zeros
-IF x's upper 16 bits are all 0 <16 | 15 | 1>
-    x << 16
-    result += 16
-IF x's upper 24 bits are all 0 <8 | 7 | 17>
-    x >> 8
-    result += 8
-IF x's upper 28 bits are all 0 <4 | 3 | 25>
-    x >> 4
-    result += 4
-IF x's upper 30 bits are all 0 <2 | 1 | 29>
-    x >> 2
-    result += 2
-IF x's upper 31 bits are all 0 <1 | 1 | 30>
-    x >> 1
-    result += 1
+TMax
+TMax
+0 | 1111111
 
-IF B is consecutive 0s, ~(B | ~B + 1) == 111...111
-IF B is not consecutive 0s, ~(B | ~B + 1) == 000...000
->>> sign
-IF x >= 0 -> ~sign == 111...111
-IF x < 0 -> ~sign == 000...000
+对负数来说, 统计第一个零出现的位置, 再加上sign bit
+对正数来说, 统计第一个壹出现的位置, 再加上sign bit
 
-truncated = ~sign * (x << 1) + sign * (~(x << 1))
+为了normalize两种情况, 使用XOR
+因为是统计第一个非consecutive bit的位置, 那么目标位的前一位总会被设为1
+因此
+11111001
+11110010
+--------XOR
+00001011
 
-0|0000000
-sign: 0
-1111111|0
+00000000
+00000000
+--------XOR
+00000000
 
-0|0000001
-sign: 0
-1111110|0
+10000000
+00000000
+--------XOR
+10000000
+
 
 */
 int howManyBits(int x)
 {
-    int sign = x >> 31;
-    int truncated = ((~sign) & (x << 1)) + (sign & (~(x << 1)));  // xxx...xx0
-    // printf("%x\n", sign);
-    // printf("%x\n", ~(x << 1));
-    // printf("%x\n", truncated);
-    int zeros = 0;
+    int truncated = x ^ (x << 1);
+
     int upper = truncated >> 16;
-    zeros += (~(upper | (~upper + 1))) & 16;
+    int res_16 = !!(upper) << 4;
 
     upper = truncated >> 24;
-    zeros += (~(upper | (~upper + 1))) & 8;
+    int res_8 = !!(upper) << 3;
 
     upper = truncated >> 28;
-    zeros += (~(upper | (~upper + 1))) & 4;
+    int res_4 = !!(upper) << 2;
 
     upper = truncated >> 30;
-    zeros += (~(upper | (~upper + 1))) & 2;
+    int res_2 = !!(upper) << 1;
 
     upper = truncated >> 31;
-    zeros += (~(upper | (~upper + 1))) & 1;
-    printf("%d\n", zeros + 1);
-    // return ((~!(x ^ 0)) | (zeros + 1)) + ((!(x ^ 0)) | 1);
-    return zeros + 1;
+    int res_1 = !!(upper);
+
+    return res_16 + res_8 + res_4 + res_2 + res_1 + 1;
 }
+/*
+
+*/
 
 // float
 /*
@@ -566,14 +548,25 @@ int floatFloat2Int(unsigned uf)
  *   Max ops: 30
  *   Rating: 4
  */
+/*
+sign | exp | frac
+  1  |  8  |  23
+
+smallest positive denorm float: 2^(-126) * 2^(-23) = 2^(-149) | 0 00000000 000...001
+biggest positive denorm float: 2^(-126) * (1 - 2^(-23)) < 2^(-126)
+smallest positive norm float: 2^(-126) * 1 = 2^(-126) | 0 00000001 000...000
+biggest positive norm float: 2^(127) * (2 - 2^(-23)) < 2^128
+*/
 unsigned floatPower2(int x)
 {
     if (x < -149) {
         return 0;
     } else if (x < -126) {
-        return (0x1 << (x + 149));
+        // denorm zone
+        return 0x1 << (x - (-149));
     } else if (x < 128) {
-        return ((x + 127) << 23);
+        // norm zone
+        return (x - (-127)) << 23;
     } else {
         return 0xff << 23;
     }
